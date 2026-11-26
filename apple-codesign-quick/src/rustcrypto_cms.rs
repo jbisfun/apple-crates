@@ -47,7 +47,7 @@ impl RustCryptoCmsSigner {
             signing_key: RsaSha256SigningKey::new(private_key),
             signer_certificate,
             certificate_chain,
-            signing_time: Some(SystemTime::now()),
+            signing_time: Some(crate::vfs::now()),
         }
     }
 

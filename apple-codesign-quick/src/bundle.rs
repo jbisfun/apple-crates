@@ -6,7 +6,7 @@ use plist::{Dictionary, Value};
 use rayon::prelude::*;
 use sha1::Digest as _;
 use std::collections::BTreeMap;
-use std::fs;
+use crate::vfs::fs;
 use std::path::{Path, PathBuf};
 
 const FAIRPLAY_DIR: &str = "SC_Info";
@@ -51,7 +51,7 @@ impl Bundle {
     pub fn open(path: impl Into<PathBuf>) -> Result<Self> {
         let path = path.into();
         let info_path = path.join("Info.plist");
-        if !info_path.exists() {
+        if !crate::vfs::exists(&info_path) {
             return Err(CodeSignError::MissingInfoPlist(info_path));
         }
 
@@ -103,7 +103,7 @@ impl Bundle {
             .map_err(|source| CodeSignError::io(&code_signature_dir, source))?;
 
         let code_resources_path = code_signature_dir.join(CODE_RESOURCES_FILE);
-        if code_resources_path.exists() {
+        if crate::vfs::exists(&code_resources_path) {
             fs::remove_file(&code_resources_path)
                 .map_err(|source| CodeSignError::io(&code_resources_path, source))?;
         }
@@ -184,7 +184,7 @@ impl Bundle {
         let mut bundles = Vec::new();
         for folder in ["Frameworks", "PlugIns"] {
             let dir = self.path.join(folder);
-            if !dir.exists() {
+            if !crate::vfs::exists(&dir) {
                 continue;
             }
 
@@ -195,7 +195,7 @@ impl Bundle {
                     .file_type()
                     .map_err(|source| CodeSignError::io(&path, source))?
                     .is_dir()
-                    && path.join("Info.plist").exists()
+                    && crate::vfs::exists(&path.join("Info.plist"))
                 {
                     bundles.push(path);
                 }
@@ -393,7 +393,7 @@ fn hash_resource_files(bundle_path: &Path, resource_files: &[PathBuf]) -> Result
 
 fn remove_fairplay_dir(bundle_path: &Path) -> Result<()> {
     let fairplay_path = bundle_path.join(FAIRPLAY_DIR);
-    if fairplay_path.exists() {
+    if crate::vfs::exists(&fairplay_path) {
         fs::remove_dir_all(&fairplay_path)
             .map_err(|source| CodeSignError::io(&fairplay_path, source))?;
     }

@@ -7,7 +7,7 @@ use crate::signature::{
 use byteorder::{BigEndian, ByteOrder, LittleEndian};
 use plist::Dictionary;
 use rayon::prelude::*;
-use std::fs;
+use crate::vfs::fs;
 use std::path::{Path, PathBuf};
 
 const MH_MAGIC: u32 = 0xfeed_face;

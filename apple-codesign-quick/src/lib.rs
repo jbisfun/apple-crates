@@ -1,6 +1,7 @@
 pub mod bundle;
 pub mod error;
 mod file_bytes;
+mod vfs;
 pub mod macho;
 pub mod provisioning;
 pub mod rustcrypto_cms;

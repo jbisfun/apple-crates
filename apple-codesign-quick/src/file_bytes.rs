@@ -1,9 +1,11 @@
 use crate::error::{CodeSignError, Result};
+use crate::vfs::fs;
+#[cfg(not(target_arch = "wasm32"))]
 use memmap2::{Mmap, MmapOptions};
-use std::fs;
 use std::path::Path;
 
 pub(crate) enum FileBytes {
+    #[cfg(not(target_arch = "wasm32"))]
     Mapped(Mmap),
     Owned(Vec<u8>),
 }
@@ -11,12 +13,22 @@ pub(crate) enum FileBytes {
 impl FileBytes {
     pub(crate) fn as_slice(&self) -> &[u8] {
         match self {
+            #[cfg(not(target_arch = "wasm32"))]
             Self::Mapped(map) => map,
             Self::Owned(bytes) => bytes,
         }
     }
 }
 
+/// wasm32: no mmap; the VFS hands back an owned copy.
+#[cfg(target_arch = "wasm32")]
+pub(crate) fn read_file_bytes(path: &Path) -> Result<FileBytes> {
+    fs::read(path)
+        .map(FileBytes::Owned)
+        .map_err(|source| CodeSignError::io(path, source))
+}
+
+#[cfg(not(target_arch = "wasm32"))]
 pub(crate) fn read_file_bytes(path: &Path) -> Result<FileBytes> {
     let file = fs::File::open(path).map_err(|source| CodeSignError::io(path, source))?;
     let len = file
